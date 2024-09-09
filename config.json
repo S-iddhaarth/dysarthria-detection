@@ -1,0 +1,13 @@
+{
+    "paths":{
+        "dataset":{
+            "train":"data",
+            "label_encoding":{
+                "F_Con":0,
+                "F_Dys":1,
+                "M_Con":2,
+                "M_Dys":3
+            }
+        }
+    }
+}
