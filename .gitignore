@@ -1,3 +1,11 @@
 __pycache__/
 data/
 test.ipynb
+ahocoder16_64
+torgo/
+*.ipynb
+M_D.py
+estimation.py
+estnoise_ms.py
+*.csv
+pair_key.json

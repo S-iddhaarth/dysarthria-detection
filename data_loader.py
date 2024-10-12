@@ -3,7 +3,7 @@ from natsort import natsorted
 from torch.utils.data import Dataset
 import soundfile as sf
 import torch
-
+from utils.utility import csv_to_tuples
 class DataLoader(Dataset):
     """
     Custom DataLoader for loading and processing audio data.
@@ -99,3 +99,16 @@ class DataLoader(Dataset):
                 data["audio"] = self.transforms(data["audio"])
 
         return data
+
+class SpeechPairLoader(Dataset):
+    def __init__(self,path) -> None:
+        self.data = csv_to_tuples(path)
+    def __len__(self):
+        return len(self.data)
+    def __getitem__(self, index):
+        dys,cont,word,intt,mic = self.data[index]
+        print(self.data[index])
+        dyss,dysd = sf.read(dys[3:])
+        conts,contd = sf.read(cont[3:])
+        
+        return dyss,dysd,conts,contd,word,intt,mic
