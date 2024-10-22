@@ -3,7 +3,7 @@ import os
 import sys
 import shutil 
 
-CATEGORIES = ['noisereduce','normalized','original']
+CATEGORIES = ['noisereduce']
 
 def make_folders(root:str)->None:
     os.makedirs(root,exist_ok=True)
@@ -20,7 +20,8 @@ def move_folder(src_folder, dest_folder):
         shutil.move(src_folder, dest_folder)
         print(f"Moved folder '{src_folder}' to '{dest_folder}' successfully.")
     except Exception as e:
-        print(f"Error: {e}")
+        
+        print(f"Error: {e} - {src_folder}")
 
 def copy():
     pass
