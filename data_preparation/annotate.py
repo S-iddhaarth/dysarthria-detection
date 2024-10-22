@@ -90,7 +90,8 @@ def process_row(personID, word, wordID, dataset, pair_key_value):
     required = glob.glob(required)
     for files in required:
         mic = files.split('\\')[-1].split('_')[-1].split('.')[0]
-        row = files, pair_key_value[mic], word, personID[2], mic
+        pth = '\\'.join(files.split('\\')[2:])
+        row = pth, pair_key_value[mic], word, personID[2], mic
         rows.append(row)
     return rows
 
@@ -142,7 +143,7 @@ def main() -> None:
         with open("pair_key.json","w") as fl:
             json.dump(pair_key,fl)
     
-    process_and_write_rows(dataset,word_list,intelligibility,pair_key,"output.csv")
+    process_and_write_rows(dataset,word_list,intelligibility,pair_key,os.path.join(root,"annotation.csv"))
 
     # for personID in intelligibility.itertuples(index=False):
     #     for word, wordID in word_list.itertuples(index=False):

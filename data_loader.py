@@ -4,6 +4,7 @@ from torch.utils.data import Dataset
 import soundfile as sf
 import torch
 from utils.utility import csv_to_tuples
+
 class DataLoader(Dataset):
     """
     Custom DataLoader for loading and processing audio data.
@@ -107,7 +108,6 @@ class SpeechPairLoader(Dataset):
         return len(self.data)
     def __getitem__(self, index):
         dys,cont,word,intt,mic = self.data[index]
-        print(self.data[index])
         dyss,dysd = sf.read(dys[3:])
         conts,contd = sf.read(cont[3:])
         

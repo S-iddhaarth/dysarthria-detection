@@ -114,53 +114,13 @@ class Print(nn.Module):
         print(x.shape)
         return x
 
-# Class for load the data into system
-class speech_data(Dataset):
-    
-    def __init__(self, folder_path):
-        self.path = folder_path
-        self.files = listdir(folder_path)
-        self.length = len(self.files)
-        
-    def __getitem__(self, index):
-        d = loadmat(join(self.path, self.files[int(index)]))
-        return np.array(d['Feat']), np.array(d['Clean_cent'])
-    
-    def __len__(self):
-        return self.length
-
-# Class for loading the testing Data
-class test_speech_data(Dataset):
-    
-    def __init__(self, folder_path):
-        self.path = folder_path
-        self.files = listdir(folder_path)
-        self.length = len(self.files)
-        
-    def __getitem__(self, index):
-        # result = np.zeros((1000,275))
-        d = loadmat(join(self.path, self.files[int(index)]))
-        print(index)
-        # result[:d.shape[0],:d.shape[1]] = d 
-        return np.array(d['Feat'])	
-    
-    def __len__(self):
-        return self.length
-
 
 # Path where you want to store your results        
 mainfolder = "/media/mihir/Dysarthia/dysarthic_interspeech/UA/gender_specific/results/"+str(f_arg)+ "/" + str(s_arg) + "_model"
 
-# Training Data path
-traindata = speech_data(folder_path="/media/mihir/Dysarthia/dysarthic_interspeech/UA/gender_specific/data/" + str(s_arg) + "_batches/training_batches")
-train_dataloader = DataLoader(dataset=traindata, batch_size=1, shuffle=True, num_workers=2)
 
-# Path for validation data
-valdata = speech_data(folder_path="/media/mihir/Dysarthia/dysarthic_interspeech/UA/gender_specific/data/" + str(s_arg) + "_batches/validation_batches")
-val_dataloader = DataLoader(dataset=valdata, batch_size=1, shuffle=True, num_workers=2)
 
-# Loss Functions
-adversarial_loss = nn.BCELoss()
+# Loss Functionsadversarial_loss = nn.BCELoss()
 mmse_loss = nn.MSELoss()
 
 # Initialization
