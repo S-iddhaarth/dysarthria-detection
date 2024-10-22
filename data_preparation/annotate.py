@@ -11,7 +11,7 @@ with required annotation and generate a csv file which can be used to load the d
     
     if you have already run this code once and generated a key_pair file then use this command
     to avoid redaundant calculation of key pair
->>> python .\\annotate.py -d ..\\data\\UASPEECH -t noisereduce -pm CM01 -pf CF02 -pk .\\key_pair.json
+>>> python .\\annotate.py -d ..\\data\\UASPEECH -t noisereduce -pm CM01 -pf CF02 -pk .\\pair_key.json
 '''
 
 import os
@@ -87,33 +87,50 @@ def generate_pair_key(word_list, dataset, pair_male_id, pair_female_id):
 def process_row(personID, word, wordID, dataset, pair_key_value):
     rows = []
     required = os.path.join(dataset, "dysarthria", personID[0], f'{personID[0]}*{wordID}*')
-    required = glob.glob(required)
-    for files in required:
-        mic = files.split('\\')[-1].split('_')[-1].split('.')[0]
-        row = files, pair_key_value[mic], word, personID[2], mic
-        rows.append(row)
+    required_files = glob.glob(required)
+    
+    already_paired = set()  # Track files that have already been paired
+    
+    # Check if there are multiple files for the same wordID
+    for file_path in required_files:
+        mic = file_path.split('\\')[-1].split('_')[-1].split('.')[0]
+        
+        # Ensure that the microphone exists in the pair_key_value (to avoid pairing issues)
+        if mic in pair_key_value:
+            # Make sure we're not pairing the same controlled file more than once
+            controlled_file = pair_key_value[mic]
+            if (file_path, controlled_file) not in already_paired:
+                row = (file_path, controlled_file, word, personID[2], mic)
+                rows.append(row)
+                already_paired.add((file_path, controlled_file))  # Mark this pair as used
+
     return rows
+
 
 def process_and_write_rows(dataset, word_list, intelligibility, pair_key, output_csv):
     with open(output_csv, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerow(['dysarthria', 'controlled', 'word', 'intelligibility', 'microphone'])
         
+        already_written = set()  # Track which rows have been written to avoid duplication
+        
         with ThreadPoolExecutor() as executor:
             futures = []
             for personID in intelligibility.itertuples(index=False):
-                if personID[0][0] == "M":
-                    key = pair_key['male']
-                else:
-                    key = pair_key['female']
+                # Select the appropriate gender key based on the speaker (M or F)
+                key = pair_key['male'] if personID[0][0] == "M" else pair_key['female']
+                
                 for word, wordID in word_list.itertuples(index=False):
-                    
                     futures.append(executor.submit(process_row, personID, word, wordID, dataset, key[wordID]))
 
             for future in tqdm(futures, desc="Processing rows", total=len(futures)):
                 rows = future.result()
                 for row in rows:
-                    writer.writerow(row)
+                    # Only write rows that haven't been written before
+                    if (row[0], row[1], row[4]) not in already_written:
+                        writer.writerow(row)
+                        already_written.add((row[0], row[1], row[4]))  # Track written rows
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
