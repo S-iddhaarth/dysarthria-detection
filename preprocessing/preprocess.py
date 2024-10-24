@@ -1,5 +1,8 @@
 from . import utils
+import librosa
 from torch.utils.data import Dataset
+import numpy as np
+from dtaidistance import dtw
 import numpy as np
 
 class piplineV1():
@@ -37,3 +40,26 @@ class piplineV1():
         cont = utils.mfcc(cont)
         
         return dys,dys_sr,cont,cont_sr,word,integibility,speaker
+    
+class pipelineV2():
+    def __init__(self,data:Dataset,config:dict) -> None:
+        self.data = data
+        self.config = config
+
+    def __len__(self):
+        return len(self.data)
+    
+    def __getitem__(self,idx):
+        dys, dys_sr, cont, cont_sr, word, integibility, speaker = self.data[idx]
+
+        dys = librosa.feature.mfcc(y=dys, sr=dys_sr, n_mfcc=13)
+        cont = librosa.feature.mfcc(y=cont, sr=cont_sr, n_mfcc=13)
+        
+        # Convert MFCCs to correct format
+        mfcc1 = np.array(dys, dtype=np.double)
+        mfcc2 = np.array(cont, dtype=np.double)
+
+        # Compute DTW distance
+        distance = dtw.distance(mfcc1, mfcc2)
+        
+        return dys, cont, distance

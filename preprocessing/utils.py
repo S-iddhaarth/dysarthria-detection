@@ -39,7 +39,6 @@ def pre_emphasis_filter(signal: np.ndarray, coeff: float=0.97) -> np.ndarray:
     """
     return np.append(signal[0], signal[1:] - coeff * signal[:-1])
 
-
 def frame(
         signal: np.ndarray, sr: int, frame_size: float = 0.025,
         frame_stride: float = 0.01
@@ -103,7 +102,6 @@ def frame(
             np.arange(0, num_frames * frame_step, frame_step), (frame_length, 1)).T
     frames = pad_signal_c[indices_c.astype(np.int32, copy=False)]
     return frames, frame_length
-
 
 def windowing(frames:np.ndarray,size:int,window:callable)->np.ndarray:
     return frames*window(size)
