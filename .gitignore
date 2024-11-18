@@ -9,3 +9,5 @@ estimation.py
 estnoise_ms.py
 *.csv
 pair_key.json
+wandb/
+weights/

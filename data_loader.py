@@ -3,8 +3,12 @@ from natsort import natsorted
 from torch.utils.data import Dataset
 import soundfile as sf
 import torch
-from utils.utility import csv_to_tuples
-
+# from utils.utility import csv_to_tuples
+import numpy as np
+import pandas as pd
+import torch.nn.functional as F
+import wandb
+from utils.utility import  csv_to_tuples
 class DataLoader(Dataset):
     """
     Custom DataLoader for loading and processing audio data.
@@ -102,13 +106,42 @@ class DataLoader(Dataset):
         return data
 
 class SpeechPairLoader(Dataset):
-    def __init__(self,path) -> None:
-        self.data = csv_to_tuples(path)
+    def __init__(self,path,select) -> None:
+        data = pd.read_csv(path)
+        unique_values = ['Very low (15%)', 'Low (29%)', 'Mid (58%)', 'High (86%)']
+        self.set = unique_values[select]
+        self.data = data[data['intt'] == self.set]
     def __len__(self):
         return len(self.data)
     def __getitem__(self, index):
-        dys,cont,word,intt,mic = self.data[index]
+        series = self.data.iloc[index]
+        # dys,cont,word,intt,mic = series[]
         dyss,dysd = sf.read(dys[3:])
         conts,contd = sf.read(cont[3:])
         
         return dyss,dysd,conts,contd,word,intt,mic
+
+class SpeechPairLoaderPreprocessed(Dataset):
+    def __init__(self,root,img_dir,img_type,annotation,select):
+        self.root = root
+        self.img_dir = img_dir
+        self.type = img_type
+        data = pd.read_csv(os.path.join(root,annotation))
+        unique_values = ['Very low (15%)', 'Low (29%)', 'Mid (58%)', 'High (86%)']
+        self.set = unique_values[select]
+        self.data = data[data['intt'] == self.set]
+        self.dys = "dysarthric_speech_path"
+        self.cont = "controlled_speech_path"
+    def __len__(self):
+        return len(self.data)
+    def __getitem__(self,index):
+        series = self.data.iloc[index]
+        cont_c = '/'.join(series[self.cont].split('\\'))
+        dys_c = '/'.join(series[self.dys].split('\\'))
+        cont_path = os.path.join(self.root,self.img_dir,self.type,cont_c)
+        dys_path = os.path.join(self.root,self.img_dir,self.type,dys_c)
+        cont = torch.tensor(np.load(cont_path),dtype=torch.float)
+        dys = torch.tensor(np.load(dys_path),dtype=torch.float)
+        # resized_cont = F.interpolate(cont.unsqueeze(0).unsqueeze(0), size=(256, 256), mode='bilinear', align_corners=False)
+        # resized_dys = F.interpolate(dys.unsqueeze(0).unsqueeze(0), size=(256, 256), mode='bilinear', align_corners=False)
+        return dys,cont

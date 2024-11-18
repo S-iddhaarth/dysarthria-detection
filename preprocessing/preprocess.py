@@ -58,7 +58,7 @@ class pipelineV2():
         # Convert MFCCs to correct format
         mfcc1 = np.array(dys, dtype=np.double)
         mfcc2 = np.array(cont, dtype=np.double)
-
+        print(mfcc1.shape,mfcc2.shape)
         # Compute DTW distance
         distance = dtw.distance(mfcc1, mfcc2)
         
