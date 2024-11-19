@@ -142,6 +142,5 @@ class SpeechPairLoaderPreprocessed(Dataset):
         dys_path = os.path.join(self.root,self.img_dir,self.type,dys_c)
         cont = torch.tensor(np.load(cont_path),dtype=torch.float)
         dys = torch.tensor(np.load(dys_path),dtype=torch.float)
-        # resized_cont = F.interpolate(cont.unsqueeze(0).unsqueeze(0), size=(256, 256), mode='bilinear', align_corners=False)
-        # resized_dys = F.interpolate(dys.unsqueeze(0).unsqueeze(0), size=(256, 256), mode='bilinear', align_corners=False)
+        
         return dys,cont

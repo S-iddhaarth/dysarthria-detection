@@ -16,8 +16,9 @@ class PositionalEncoding(nn.Module):
     def forward(self, x):
         return x + self.pe[:, :x.size(1)]
 
+
 class Generator(nn.Module):
-    def __init__(self, input_channels,output_channel, d_model=300, nhead=10, num_layers=8, dim_feedforward=1024):
+    def __init__(self, input_channels, output_channel, d_model=300, nhead=10, num_layers=8, dim_feedforward=1024):
         super().__init__()
         
         # Initial projection from input channels to d_model
@@ -36,6 +37,9 @@ class Generator(nn.Module):
         # Output projection
         self.output_proj = nn.Linear(d_model, output_channel)  # Same channels as input
         
+        # Initialize weights
+        self.init_weights()
+
     def forward(self, x):
         # x shape: [batch_size, channels, seq_len]
         x = x.transpose(1, 2)  # [batch_size, seq_len, channels]
@@ -56,6 +60,13 @@ class Generator(nn.Module):
         x = x.transpose(1, 2)  # [batch_size, channels, seq_len]
         return x
 
+    def init_weights(self):
+        # Xavier initialization for Linear layers
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)  # Xavier uniform initialization for weights
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)  # Initialize biases to zero
 
 
 class Discriminator(nn.Module):
@@ -80,6 +91,9 @@ class Discriminator(nn.Module):
         self.fc2 = nn.Linear(d_model // 2, 1)
         self.relu = nn.ReLU()
         
+        # Initialize weights
+        self.init_weights()
+
     def forward(self, x, y):
         # x, y shape: [batch_size, channels, seq_len]
         x = x.transpose(1, 2)  # [batch_size, seq_len, channels]
@@ -104,3 +118,11 @@ class Discriminator(nn.Module):
         xy = self.relu(self.fc1(xy))
         xy = self.fc2(xy)
         return xy
+
+    def init_weights(self):
+        # Xavier initialization for Linear layers
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_uniform_(m.weight)  # Xavier uniform initialization for weights
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)  # Initialize biases to zero

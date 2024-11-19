@@ -16,8 +16,9 @@ class PositionalEncoding(nn.Module):
     def forward(self, x):
         return x + self.pe[:, :x.size(1)]
 
+
 class Generator(nn.Module):
-    def __init__(self, input_channels,output_channel, d_model=300, nhead=10, num_layers=8, dim_feedforward=1024):
+    def __init__(self, input_channels, output_channel, d_model=300, nhead=10, num_layers=8, dim_feedforward=1024, dropout=0.1):
         super().__init__()
         
         # Initial projection from input channels to d_model
@@ -26,15 +27,22 @@ class Generator(nn.Module):
         # Positional encoding
         self.pos_encoder = PositionalEncoding(d_model)
         
-        # Transformer encoder
+        # Transformer encoder with layer normalization
         encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, 
-                                                 nhead=nhead,
-                                                 dim_feedforward=dim_feedforward,
-                                                 batch_first=True)
+                                                   nhead=nhead,
+                                                   dim_feedforward=dim_feedforward,
+                                                   dropout=dropout,
+                                                   batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         
         # Output projection
         self.output_proj = nn.Linear(d_model, output_channel)  # Same channels as input
+        
+        # Layer Normalization
+        self.layer_norm = nn.LayerNorm(d_model)
+        
+        # Dropout layers
+        self.dropout = nn.Dropout(dropout)
         
     def forward(self, x):
         # x shape: [batch_size, channels, seq_len]
@@ -49,6 +57,10 @@ class Generator(nn.Module):
         # Pass through transformer
         x = self.transformer_encoder(x)
         
+        # Apply layer normalization and dropout
+        x = self.layer_norm(x)
+        x = self.dropout(x)
+        
         # Project back to original channel dimension
         x = self.output_proj(x)
         
@@ -57,9 +69,8 @@ class Generator(nn.Module):
         return x
 
 
-
 class Discriminator(nn.Module):
-    def __init__(self, input_channels, d_model=256, nhead=8, num_layers=4, dim_feedforward=1024):
+    def __init__(self, input_channels, d_model=256, nhead=8, num_layers=4, dim_feedforward=1024, dropout=0.1):
         super().__init__()
         
         # Initial projection
@@ -68,17 +79,24 @@ class Discriminator(nn.Module):
         # Positional encoding
         self.pos_encoder = PositionalEncoding(d_model)
         
-        # Transformer encoder
+        # Transformer encoder with layer normalization
         encoder_layer = nn.TransformerEncoderLayer(d_model=d_model,
-                                                 nhead=nhead,
-                                                 dim_feedforward=dim_feedforward,
-                                                 batch_first=True)
+                                                   nhead=nhead,
+                                                   dim_feedforward=dim_feedforward,
+                                                   dropout=dropout,
+                                                   batch_first=True)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
         
         # Output layers
         self.fc1 = nn.Linear(d_model, d_model // 2)
         self.fc2 = nn.Linear(d_model // 2, 1)
-        self.relu = nn.ReLU()
+        self.relu = nn.LeakyReLU(0.2)  # Leaky ReLU activation
+        
+        # Layer Normalization
+        self.layer_norm = nn.LayerNorm(d_model)
+        
+        # Dropout layers
+        self.dropout = nn.Dropout(dropout)
         
     def forward(self, x, y):
         # x, y shape: [batch_size, channels, seq_len]
@@ -96,6 +114,10 @@ class Discriminator(nn.Module):
         
         # Pass through transformer
         xy = self.transformer_encoder(xy)
+        
+        # Apply layer normalization and dropout
+        xy = self.layer_norm(xy)
+        xy = self.dropout(xy)
         
         # Global average pooling
         xy = torch.mean(xy, dim=1)  # [batch_size, d_model]

@@ -117,7 +117,7 @@ def evaluate_step(real_input, real_output, generator, discriminator):
 
 root = 'data/UASPEECH'
 img_dir = 'mfcc_low'
-img_type = "reflect_interpolate"
+img_type = "reflect"
 annotation = "output_low_reduced.csv"
 if log:
     wandb.init(
@@ -160,18 +160,18 @@ test_loader = DataLoader(
     )
 
 your_channel_size = 13
-generator = GAN.Generator(input_channels=80,output_channels=80).cuda()
+generator = GAN.Generator(input_channels=80,output_channel=80).cuda()
 discriminator = GAN.Discriminator(input_channels=80).cuda()
 
 
 print(summary(generator,torch.rand((32,80,250)).cuda()))
 
-g_optimizer = optimizer.SophiaG(generator.parameters(),lr=0.001)
-d_optimizer = optimizer.SophiaG(discriminator.parameters(),lr=0.001)
+g_optimizer = torch.optim.AdamW(generator.parameters(),lr=0.01)
+d_optimizer = torch.optim.AdamW(discriminator.parameters(),lr=0.01)
 
 
-warmup_steps = 300
-total_steps = 16*300
+warmup_steps = 100
+total_steps = 16*100
 
 
 g_scheduler_cosine = CosineAnnealingLR(g_optimizer, T_max=total_steps - warmup_steps)
@@ -182,7 +182,7 @@ g_scheduler = WarmupScheduler(g_optimizer, warmup_steps, g_scheduler_cosine)
 d_scheduler = WarmupScheduler(d_optimizer, warmup_steps, d_scheduler_cosine)
 
 frequency = 5
-checkpoint = r'weights/experiment_2'
+checkpoint = r'weights/experiment_1'
 os.makedirs(checkpoint,exist_ok=True)
 for i in range(300):
     start = time.time()
