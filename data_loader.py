@@ -106,6 +106,11 @@ class DataLoader(Dataset):
         return data
 
 class SpeechPairLoader(Dataset):
+    
+    """
+    It is used to load the audio pair based on the informatioon present in the 
+    annotation file
+    """
     def __init__(self,path,select) -> None:
         data = pd.read_csv(path)
         unique_values = ['Very low (15%)', 'Low (29%)', 'Mid (58%)', 'High (86%)']
